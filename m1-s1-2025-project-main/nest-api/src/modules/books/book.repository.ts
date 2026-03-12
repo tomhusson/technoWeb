@@ -9,6 +9,7 @@ import {
   UpdateBookModel,
 } from './book.model';
 import { BookEntity, BookId } from './entities/book.entity';
+import { SaleEntity } from '../sales/sale.entity';
 
 @Injectable()
 export class BookRepository {
@@ -17,6 +18,8 @@ export class BookRepository {
     private readonly authorRepository: Repository<AuthorEntity>,
     @InjectRepository(BookEntity)
     private readonly bookRepository: Repository<BookEntity>,
+    @InjectRepository(SaleEntity)
+    private readonly saleRepository: Repository<SaleEntity>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -30,7 +33,16 @@ export class BookRepository {
       order: input?.sort,
     });
 
-    return [books, totalCount];
+    const booksWithCount = await Promise.all(
+      books.map(async (book) => {
+        const purchaseCount = await this.saleRepository.count({
+          where: { bookId: book.id },
+        });
+        return { ...book, purchaseCount };
+      }),
+    );
+
+    return [booksWithCount, totalCount];
   }
 
   public async getBookById(id: string): Promise<BookModel | undefined> {
@@ -38,22 +50,27 @@ export class BookRepository {
       where: { id: id as BookId },
     });
 
-    if (!book) {
-      return undefined;
-    }
+    if (!book) return undefined;
 
     const author = await this.authorRepository.findOne({
       where: { id: book.authorId },
     });
 
-    if (!author) {
-      return undefined;
-    }
+    if (!author) return undefined;
+
+    const sales = await this.saleRepository.find({
+      where: { bookId: book.id },
+      relations: ['customer'],
+    });
+
+    const purchaseCount = sales.length;
 
     return {
       ...book,
       author,
-    };
+      purchaseCount,
+      sales,
+    } as BookModel & { sales: SaleEntity[] };
   }
 
   public async createBook(book: CreateBookModel): Promise<BookModel> {
@@ -61,9 +78,7 @@ export class BookRepository {
       where: { id: book.authorId },
     });
 
-    if (!author) {
-      throw new Error('Author not found');
-    }
+    if (!author) throw new Error('Author not found');
 
     return this.bookRepository.save(this.bookRepository.create(book));
   }
@@ -76,9 +91,7 @@ export class BookRepository {
       where: { id: id as BookId },
     });
 
-    if (!oldBook) {
-      return undefined;
-    }
+    if (!oldBook) return undefined;
 
     await this.bookRepository.update(id, book);
   }

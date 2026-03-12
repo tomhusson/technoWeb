@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
+import { Breadcrumb } from 'antd'
 import { useBookProvider } from '../providers/useBookProvider'
 import { BookListItem } from './BookListItem'
 import { CreateBookModal } from './CreateBookModal'
 
 export function BookList() {
-  const { books, loadBooks, deleteBook, updateBook, createBook } =
-    useBookProvider()
+  const { books, loadBooks, deleteBook, updateBook, createBook } = useBookProvider()
 
   useEffect(() => {
     loadBooks()
@@ -13,9 +13,10 @@ export function BookList() {
 
   return (
     <>
+      <Breadcrumb items={[{ title: 'Books' }]} style={{ marginBottom: 16, padding: '0 .5rem' }} />
       <CreateBookModal onCreate={createBook} />
       <div style={{ padding: '0 .5rem' }}>
-        {books.map(book => (
+        {books.map((book) => (
           <BookListItem
             key={book.id}
             book={book}

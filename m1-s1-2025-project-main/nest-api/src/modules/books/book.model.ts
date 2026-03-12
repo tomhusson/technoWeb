@@ -10,12 +10,15 @@ export type BookModel = {
   title: string;
   author: BookAuthorModel;
   yearPublished: number;
+  photoUrl?: string;
+  purchaseCount?: number;
 };
 
 export type CreateBookModel = {
   title: string;
   authorId: AuthorId;
   yearPublished: number;
+  photoUrl?: string;
 };
 
 export type UpdateBookModel = Partial<CreateBookModel>;

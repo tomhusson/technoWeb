@@ -1,11 +1,13 @@
-export class CreateAuthorDto {
+export class CreateCustomerDto {
   firstName: string;
   lastName: string;
+  email?: string;
   photoUrl?: string;
 }
 
-export class UpdateAuthorDto {
+export class UpdateCustomerDto {
   firstName?: string;
   lastName?: string;
+  email?: string;
   photoUrl?: string;
 }
